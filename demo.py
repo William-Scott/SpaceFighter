@@ -10,6 +10,7 @@ import os
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player,self).__init__()
+        self.shot1 = pygame.mixer.Sound("res\\shot1.ogg")
         self.surf_player_image = pygame.image.load(resource_path("res\\player.png")).convert_alpha()
         self.surf_flash_image = pygame.image.load(resource_path("res\\flash.png")).convert_alpha()
         self.surf_explosion_image = pygame.image.load(resource_path("res\\explosion.png")).convert_alpha()
@@ -94,6 +95,7 @@ class Player(pygame.sprite.Sprite):
                     bullet = Bullet(self.rect[0]+180, self.rect[1]+55)
                     self.bullets.add(bullet)
                     group.add(bullet)
+                    channel = self.shot1.play(0,356,100)
                     self.flash_cd = True
                 if self.flash_cd == True and self.cd < 5:
                     self.cd += 1
@@ -103,9 +105,9 @@ class Player(pygame.sprite.Sprite):
                         screen.blit(self.surf_player_flash, (self.rect[0]+130,self.rect[1]+15))
                     elif self.speed_y <= 1:
                         screen.blit(self.surf_player_flash, (self.rect[0]+130,self.rect[1]+15))
-                elif self.flash_cd == True and self.cd < 10:
+                elif self.flash_cd == True and self.cd < 20:
                     self.cd += 1
-                elif self.flash_cd == True and self.cd == 10:
+                elif self.flash_cd == True and self.cd == 20:
                     self.flash_cd = False
                     self.cd = 0
             else:
@@ -511,6 +513,8 @@ class BackGroundManager():
 
 class CollisionDetection():
     def __init__(self, group1, group2, group3, group4):
+        self.hit = pygame.mixer.Sound("res\\hit.ogg")
+        self.explosion = pygame.mixer.Sound("res\\explosion.ogg")
         self.group1 = group1
         self.group2 = group2
         self.group3 = group3
@@ -525,12 +529,14 @@ class CollisionDetection():
                         #pygame.draw.rect (screen, (255, 0, 0), entity2.rect, 5)
                         self.group1.remove(entity1)
                         entity1.islive = False
+                        channel = self.hit.play()
                         if entity2.health:
                             entity2.health -= 1
                         else:
                             su(100)
                             self.group2.remove(entity2)
                             entity2.islive = False
+                            channel = self.explosion.play()
         for entity1 in self.group1:
             for entity3 in self.group3:
                 if entity1 and entity3:
@@ -541,8 +547,10 @@ class CollisionDetection():
                         #pygame.draw.rect (screen, (255, 0, 0), entity3.rect, 5)
                         self.group1.remove(entity1)
                         entity1.islive = False
+                        channel = self.hit.play()
                         self.group3.remove(entity3)
                         entity3.islive = False
+                        channel = self.explosion.play()
         for entity4 in self.group4:
             for entity3 in self.group3:
                 if entity4 and entity3:
@@ -553,6 +561,7 @@ class CollisionDetection():
                             entity4.islive = False
                             self.group3.remove(entity3)
                             entity3.islive = False
+                            channel = self.explosion.play()
         for entity4 in self.group4:
             for entity2 in self.group2:
                 if entity4 and entity2:
@@ -563,6 +572,7 @@ class CollisionDetection():
                             entity4.islive = False
                             self.group3.remove(entity2)
                             entity2.islive = False
+                            channel = self.explosion.play()
 
 class Shock():
     def __init__(self):
@@ -749,6 +759,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # 初始化 pygame
+pygame.mixer.pre_init(44100, -16, 2, 1024)
 pygame.init()
 # 创建屏幕对象
 # 设定尺寸
@@ -779,6 +790,9 @@ asteroids = pygame.sprite.Group()
 cd = CollisionDetection(bullets, enemys, asteroids, players)
 # 用于保证主循环运行的变量
 running = True
+
+pygame.mixer.music.load("res\\spaceasteroids.ogg")
+pygame.mixer.music.play(-1)
 # 主循环！
 while running:
     # Setup the clock for a decent framerate

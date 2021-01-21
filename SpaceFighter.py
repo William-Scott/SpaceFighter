@@ -195,7 +195,6 @@ class Enemy(pygame.sprite.Sprite):
 class Enemy1(Enemy):
     def __init__(self, posx, posy, players):
         super(Enemy1, self).__init__(posx, posy)
-        print("to modle 1")
         self.ai = Ai(self, players, 1)
     def update(self, screen, bullet_es):
         if self.islive:
@@ -414,16 +413,7 @@ class Ai():
             pass
         elif self.species == 1:
             if self.body.islive:
-                if self.timeline < 360:
-                    if self.cd < 60:
-                        self.cd += 1
-                    elif self.cd == 60:
-                        self.seek()
-                        self.cd = 0
-                    self.hit()
-                    self.timeline += 1
-                else:
-                    self.go_forward()
+                self.go_forward()
         elif self.species == 2:
             if self.body.islive:
                 if self.timeline < 360:
@@ -504,29 +494,33 @@ class EnemyManager():
         self.hasboss = False
     def update(self, screen, enemys, players, bullet_es, sc):
         if self.stage == 1:
-            if self.cd < 60:
-                self.cd += 1
-            elif self.cd == 60:
-                enemy1 = Enemy1(random.randint(1360, 1560), random.randint(50, 750), players)
-                self.enemys.add(enemy1)
-                enemys.add(enemy1)
-                self.cd = 0
-                self.time += 1
-            if self.time == 16:
-                self.stage = 2
-                self.time = 0
+            if self.time < 16:
+                if self.cd < 60:
+                    self.cd += 1
+                elif self.cd == 60:
+                    enemy1 = Enemy1(random.randint(1360, 1560), random.randint(50, 750), players)
+                    self.enemys.add(enemy1)
+                    enemys.add(enemy1)
+                    self.cd = 0
+                    self.time += 1
+            elif self.time == 16:
+                if len(self.enemys) == 0:
+                    self.stage = 2
+                    self.time = 0
         elif self.stage == 2:
-            if self.cd < 90:
-                self.cd += 1
-            elif self.cd == 90:
-                enemy2 = Enemy2(random.randint(1360, 1560), random.randint(50, 750), players)
-                self.enemys.add(enemy2)
-                enemys.add(enemy2)
-                self.cd = 0
-                self.time += 1
-            if self.time == 10:
-                self.stage = 4
-                self.time = 0
+            if self.time < 10:
+                if self.cd < 90:
+                    self.cd += 1
+                elif self.cd == 90:
+                    enemy2 = Enemy2(random.randint(1360, 1560), random.randint(50, 750), players)
+                    self.enemys.add(enemy2)
+                    enemys.add(enemy2)
+                    self.cd = 0
+                    self.time += 1
+            elif self.time == 10:
+                if len(self.enemys) == 0:
+                    self.stage = 4
+                    self.time = 0
         elif self.stage == 3:
             pass
         elif self.stage == 4:

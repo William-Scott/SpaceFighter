@@ -146,8 +146,12 @@ class Ai():
             if self.body.islive:
                 for pointerlist in self.seqlistsum:
                     hasst = False
+                    #print(random.randint(1,99))
                     for pointer in pointerlist:
+                        #print(random.randint(1,99))
+                        #print(pointer.haspass)
                         if not pointer.haspass:
+                            #print(random.randint(1,99))
                             if pointer.state == "play":
                                 if pointer.name == "go_up":
                                     self.go_up()
@@ -167,19 +171,14 @@ class Ai():
                                 elif pointer.name == "stop":
                                     pass
                                 elif pointer.name == "save":
-                                    self.save = pointerlist
-                                elif pointer.name == "load":
-                                    index = self.seqlistsum.index(self.save)
-                                    index -= 1
-                                    while index >= 0:
-                                        self.seqlistsum.pop(index)
-                                        index -= 1
-                                    for pointerlist in self.seqlistsum:
-                                        for pointer in pointerlist:
-                                            pointer.restore()
-                                else:
-                                    pass
+                                    self.save = pointer.num
                                 pointer.update()
+                                if pointer.name == "load":
+                                    for pointerlist_ in self.seqlistsum:
+                                        for pointer_ in pointerlist_:
+                                            if pointer_.num >= self.save:
+                                                pointer_.restore()
+                                                #print(pointer_.name,pointer_.haspass)
                                 hasst = True
                             elif pointer.state == "wait":
                                 pointer.update()
@@ -202,7 +201,6 @@ class Sequence():
         self.state = "play"
     def update(self):
         if self.cycles > 0:
-            print(self.num, self.name, self.last, self.interval, self.cycles, self.state, self.haspass)
             if self.state == "play":
                 self.last -= 1
                 if self.last <= 0:

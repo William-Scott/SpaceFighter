@@ -1,14 +1,8 @@
-import pygame
-import random
-import numpy as np
-from pygame.locals import *
-import sys
-import os
-
+import xlrd
 from bullet import *
 
 class Ai():
-    def __init__(self, body, players, species):
+    def __init__(self, body, players, species, es):
         self.timeline = 0
         self.body = body
         self.rect = body.rect
@@ -18,67 +12,8 @@ class Ai():
         self.posy = 0
         self.cd = 0
         self.species = species
-        self.seqlist1 = []
-        self.seqlist2 = []
-        self.seqlist3 = []
-        self.seqlist4 = []
-        self.seqlist5 = []
-        self.seqlist6 = []
-        self.seqlist7 = []
-        self.seqlist8 = []
-        self.seqlist9 = []
-        self.seqlist10 = []
-        self.seqlistsum = []
+        self.seqlistsum = es
         self.save = 0
-        if species == 3:
-            self.seq1 = Sequence(1, "go_forward", 180, 0, 1)
-            self.seq2 = Sequence(2, "stop", 60, 0, 1)
-            self.seq3 = Sequence(2, "shot2", 1, 19, 3)
-            self.seq4 = Sequence(2, "save", 1, 0, 1)
-            self.seq5 = Sequence(3, "go_up", 120, 0, 1)
-            self.seq6 = Sequence(3, "shot1", 1, 19, 6)
-            self.seq7 = Sequence(4, "stop", 60, 0, 1)
-            self.seq8 = Sequence(4, "shot2", 1, 19, 3)
-            self.seq9 = Sequence(5, "go_down", 120, 0, 1)
-            self.seq10 = Sequence(5, "shot1", 1, 19, 6)
-            self.seq11 = Sequence(6, "stop", 60, 0, 1)
-            self.seq12 = Sequence(6, "shot2", 1, 19, 3)
-            self.seq13 = Sequence(7, "go_down", 120, 0, 1)
-            self.seq14 = Sequence(7, "shot1", 1, 19, 6)
-            self.seq15 = Sequence(8, "stop", 60, 0, 1)
-            self.seq16 = Sequence(8, "shot2", 1, 19, 3)
-            self.seq17 = Sequence(9, "go_up", 120, 0, 1)
-            self.seq18 = Sequence(9, "shot1", 1, 19, 6)
-            self.seq19 = Sequence(10, "load", 1, 0, 1)
-            self.seqlist1.append(self.seq1)
-            self.seqlist2.append(self.seq2)
-            self.seqlist2.append(self.seq3)
-            self.seqlist2.append(self.seq4)
-            self.seqlist3.append(self.seq5)
-            self.seqlist3.append(self.seq6)
-            self.seqlist4.append(self.seq7)
-            self.seqlist4.append(self.seq8)
-            self.seqlist5.append(self.seq9)
-            self.seqlist5.append(self.seq10)
-            self.seqlist6.append(self.seq11)
-            self.seqlist6.append(self.seq12)
-            self.seqlist7.append(self.seq13)
-            self.seqlist7.append(self.seq14)
-            self.seqlist8.append(self.seq15)
-            self.seqlist8.append(self.seq16)
-            self.seqlist9.append(self.seq17)
-            self.seqlist9.append(self.seq18)
-            self.seqlist10.append(self.seq19)
-            self.seqlistsum.append(self.seqlist1)
-            self.seqlistsum.append(self.seqlist2)
-            self.seqlistsum.append(self.seqlist3)
-            self.seqlistsum.append(self.seqlist4)
-            self.seqlistsum.append(self.seqlist5)
-            self.seqlistsum.append(self.seqlist6)
-            self.seqlistsum.append(self.seqlist7)
-            self.seqlistsum.append(self.seqlist8)
-            self.seqlistsum.append(self.seqlist9)
-            self.seqlistsum.append(self.seqlist10)
     def go_up(self):
         self.rect.move_ip(0, -self.speed)
     def go_down(self):
@@ -146,12 +81,8 @@ class Ai():
             if self.body.islive:
                 for pointerlist in self.seqlistsum:
                     hasst = False
-                    #print(random.randint(1,99))
                     for pointer in pointerlist:
-                        #print(random.randint(1,99))
-                        #print(pointer.haspass)
                         if not pointer.haspass:
-                            #print(random.randint(1,99))
                             if pointer.state == "play":
                                 if pointer.name == "go_up":
                                     self.go_up()
@@ -173,12 +104,12 @@ class Ai():
                                 elif pointer.name == "save":
                                     self.save = pointer.num
                                 pointer.update()
+                                #由于是先重置再updata,所以load并不能重置自身，所以load可以不update
                                 if pointer.name == "load":
                                     for pointerlist_ in self.seqlistsum:
                                         for pointer_ in pointerlist_:
                                             if pointer_.num >= self.save:
                                                 pointer_.restore()
-                                                #print(pointer_.name,pointer_.haspass)
                                 hasst = True
                             elif pointer.state == "wait":
                                 pointer.update()
@@ -186,39 +117,3 @@ class Ai():
                     if hasst:
                         break
 
-class Sequence():
-    def __init__(self, num, name, last, interval, cycles, priority=0):
-        self.num = num
-        self.name = name
-        self.last_old = last
-        self.last = last
-        self.interval_old = interval
-        self.interval = interval
-        self.cycles_old = cycles
-        self.cycles = cycles
-        self.priority = priority
-        self.haspass = False
-        self.state = "play"
-    def update(self):
-        if self.cycles > 0:
-            if self.state == "play":
-                self.last -= 1
-                if self.last <= 0:
-                    self.state = "wait"
-            elif self.state == "wait":
-                self.interval -= 1
-                if self.interval <= 0:
-                    self.last = self.last_old
-                    self.interval = self.interval_old
-                    self.state = "play"
-                    self.cycles -= 1
-                    if self.cycles == 0:
-                        self.haspass = True
-        else:
-            self.haspass = True
-    def restore(self):
-        self.last = self.last_old
-        self.interval = self.interval_old
-        self.cycles = self.cycles_old
-        self.state = "play"
-        self.haspass = False

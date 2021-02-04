@@ -43,9 +43,9 @@ class Enemy(pygame.sprite.Sprite):
         self.timeline = 0
 
 class Enemy0(Enemy):
-    def __init__(self, posx, posy, players):
+    def __init__(self, posx, posy, players, es):
         super(Enemy0, self).__init__(posx, posy)
-        self.ai = Ai(self, players, 0)
+        self.ai = Ai(self, players)
         self.health = 1
     def update(self, screen, bullet_es):
         if self.islive:
@@ -97,14 +97,14 @@ class Enemy0(Enemy):
                 self.cdex += 1
                 self.kill()
 class Enemy1(Enemy0):
-    def __init__(self, posx, posy, players):
+    def __init__(self, posx, posy, players, es):
         super(Enemy1, self).__init__(posx, posy, players)
-        self.ai = Ai(self, players, 1)
+        self.ai = Ai(self, players)
 class Enemy2(Enemy):
-    def __init__(self, posx, posy, players):
+    def __init__(self, posx, posy, players, es):
         super(Enemy2, self).__init__(posx, posy)
         self.health = 2
-        self.ai = Ai(self, players, 2)
+        self.ai = Ai(self, players)
     def update(self, screen, bullet_es):
         if self.islive:
             self.ai.update(self.bullets, bullet_es)
@@ -161,14 +161,14 @@ class Enemy2(Enemy):
                 self.bullets.update(screen)
 
 class Boss1(Enemy):
-    def __init__(self, posx, posy, players):
+    def __init__(self, posx, posy, players, es):
         super(Boss1, self).__init__(posx, posy)
         self.speed = 1
         self.health = 59
         self.mask = pygame.mask.from_surface(self.surf_boss_1a)
         #self.weapon1 = Boss1Weapon(-45)
         #self.weapon2 = Boss1Weapon(45)
-        self.ai = Ai(self, players, 3)
+        self.ai = Ai(self, players, es)
     def update(self, screen, bullet_es):
         if self.islive:
             self.ai.update(self.bullets, bullet_es)
@@ -230,14 +230,36 @@ class EnemyManager():
         self.round = 1
         self.enemys = pygame.sprite.Group()
         self.hasboss = False
-    def mob0(self, enemys, players, *pos):
+        file = 'res\\enemy_script.xlsx'
+        wb = xlrd.open_workbook(filename=file)
+        sheet_enemy0 = wb.sheet_by_name('Enemy0')
+        sheet_enemy1 = wb.sheet_by_name('Enemy1')
+        sheet_enemy2 = wb.sheet_by_name('Enemy2')
+        sheet_boss1 = wb.sheet_by_name('BOSS1')
+        self.enemy0_script = [[] for i in range(sheet_enemy0.nrows-1)]
+        self.enemy1_script = [[] for i in range(sheet_enemy1.nrows-1)]
+        self.enemy2_script = [[] for i in range(sheet_enemy2.nrows-1)]
+        self.boss1_script = [[] for i in range(sheet_boss1.nrows-1)]
+        for j in range(sheet_enemy0.nrows-1):
+            seq = Sequence(sheet_enemy0.row(j+1)[0].value, sheet_enemy0.row(j+1)[1].value, sheet_enemy0.row(j+1)[2].value, sheet_enemy0.row(j+1)[3].value, sheet_enemy0.row(j+1)[4].value, sheet_enemy0.row(j+1)[5].value)
+            self.enemy0_script[int(seq.num)-1].append(seq)
+        for j in range(sheet_enemy1.nrows-1):
+            seq = Sequence(sheet_enemy1.row(j+1)[0].value, sheet_enemy1.row(j+1)[1].value, sheet_enemy1.row(j+1)[2].value, sheet_enemy1.row(j+1)[3].value, sheet_enemy1.row(j+1)[4].value, sheet_enemy1.row(j+1)[5].value)
+            self.enemy1_script[int(seq.num)-1].append(seq)
+        for j in range(sheet_enemy2.nrows-1):
+            seq = Sequence(sheet_enemy2.row(j+1)[0].value, sheet_enemy2.row(j+1)[1].value, sheet_enemy2.row(j+1)[2].value, sheet_enemy2.row(j+1)[3].value, sheet_enemy2.row(j+1)[4].value, sheet_enemy2.row(j+1)[5].value)
+            self.enemy2_script[int(seq.num)-1].append(seq)
+        for j in range(sheet_boss1.nrows-1):
+            seq = Sequence(sheet_boss1.row(j+1)[0].value, sheet_boss1.row(j+1)[1].value, sheet_boss1.row(j+1)[2].value, sheet_boss1.row(j+1)[3].value, sheet_boss1.row(j+1)[4].value, sheet_boss1.row(j+1)[5].value)
+            self.boss1_script[int(seq.num)-1].append(seq)
+    def mob0(self, enemys, players, es, *pos):
         for p in pos:
-            enemy0 = Enemy0(p[0], p[1], players)
+            enemy0 = Enemy0(p[0], p[1], players, es)
             self.enemys.add(enemy0)
             enemys.add(enemy0)
-    def mob1(self, enemys, players, *pos):
+    def mob1(self, enemys, players, es, *pos):
         for p in pos:
-            enemy1 = Enemy1(p[0], p[1], players)
+            enemy1 = Enemy1(p[0], p[1], players, es)
             self.enemys.add(enemy1)
             enemys.add(enemy1)
     def update(self, screen, enemys, players, bullet_es, sc):
@@ -245,9 +267,9 @@ class EnemyManager():
             if self.round == 1:
                 if self.time <= 600:
                     if np.mod(self.time, 200) == 0:
-                        self.mob0(enemys, players, (1410, 250), (1560 ,250), (1710, 250))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 250), (1560 ,250), (1710, 250))
                     elif np.mod(self.time, 100) == 0:
-                        self.mob0(enemys, players, (1410, 550), (1560 ,550), (1710, 550))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 550), (1560 ,550), (1710, 550))
                     self.time += 1
                 else:
                     if len(self.enemys) == 0:
@@ -258,7 +280,7 @@ class EnemyManager():
             elif self.round == 2:
                 if self.time <= 600:
                     if np.mod(self.time, 120) == 0:
-                        self.mob1(enemys, players, (1410, 400))
+                        self.mob1(enemys, players, self.enemy1_script, (1410, 400))
                     self.time += 1
                 else:
                     if len(self.enemys) == 0:
@@ -269,9 +291,9 @@ class EnemyManager():
             elif self.round == 3:
                 if self.time <= 600:
                     if np.mod(self.time, 200) == 0:
-                        self.mob0(enemys, players, (1410, 400), (1510 ,250), (1610, 100))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 400), (1510 ,250), (1610, 100))
                     elif np.mod(self.time, 100) == 0:
-                        self.mob0(enemys, players, (1410, 400), (1510 ,550), (1610, 700))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 400), (1510 ,550), (1610, 700))
                     self.time += 1
                 else:
                     if len(self.enemys) == 0:
@@ -284,9 +306,9 @@ class EnemyManager():
             elif self.round == 5:
                 if self.time <= 1200:
                     if np.mod(self.time, 400) == 0:
-                        self.mob0(enemys, players, (1410, 400), (1410 ,250), (1510 ,550), (1510, 100), (1610, 700))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 400), (1410 ,250), (1510 ,550), (1510, 100), (1610, 700))
                     elif np.mod(self.time, 200) == 0:
-                        self.mob0(enemys, players, (1410, 700), (1410 ,100), (1510 ,550), (1510, 250), (1610, 400))
+                        self.mob0(enemys, players, self.enemy0_script, (1410, 700), (1410 ,100), (1510 ,550), (1510, 250), (1610, 400))
                     self.time += 1
                 else:
                     if len(self.enemys) == 0:
@@ -300,7 +322,7 @@ class EnemyManager():
                 if self.cd < 90:
                     self.cd += 1
                 elif self.cd == 90:
-                    enemy2 = Enemy2(random.randint(1360, 1560), random.randint(50, 750), players)
+                    enemy2 = Enemy2(random.randint(1360, 1560), random.randint(50, 750), players, self.enemy2_script)
                     self.enemys.add(enemy2)
                     enemys.add(enemy2)
                     self.cd = 0
@@ -313,10 +335,47 @@ class EnemyManager():
             pass
         elif self.stage == 4:
             if self.hasboss == False:
-                boss1 = Boss1(1360, 250, players)
+                boss1 = Boss1(1360, 250, players, self.boss1_script)
                 self.enemys.add(boss1)
                 enemys.add(boss1)
                 self.hasboss = True
             if self.hasboss and len(self.enemys) == 0:
                 sc('run', 'win')
         self.enemys.update(screen, bullet_es)
+
+class Sequence():
+    def __init__(self, num, name, last, interval, cycles, extra=0):
+        self.num = num
+        self.name = name
+        self.last_old = last
+        self.last = last
+        self.interval_old = interval
+        self.interval = interval
+        self.cycles_old = cycles
+        self.cycles = cycles
+        self.extra = extra
+        self.haspass = False
+        self.state = "play"
+    def update(self):
+        if self.cycles > 0:
+            if self.state == "play":
+                self.last -= 1
+                if self.last <= 0:
+                    self.state = "wait"
+            elif self.state == "wait":
+                self.interval -= 1
+                if self.interval <= 0:
+                    self.last = self.last_old
+                    self.interval = self.interval_old
+                    self.state = "play"
+                    self.cycles -= 1
+                    if self.cycles == 0:
+                        self.haspass = True
+        else:
+            self.haspass = True
+    def restore(self):
+        self.last = self.last_old
+        self.interval = self.interval_old
+        self.cycles = self.cycles_old
+        self.state = "play"
+        self.haspass = False
